@@ -1,0 +1,365 @@
+* Basic configuration
+  Alias for mac checking
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(setq is-mac (equal system-type 'darwin))
+  #+END_SRC
+
+  Load packages
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(load "package")
+(package-initialize)
+(add-to-list 'package-archives
+             '("mermelade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+(add-to-list 'custom-theme-load-path "~/.emacs.d/lib/color-themes")
+
+(setq package-archive-enable-alist '(("melpa" deft magit)))
+  #+END_SRC
+
+  Show always on full screen
+  #+BEGIN_SRC emacs-lisp :tangle yes
+;; I'm not sure if should set always
+;; (set-frame-parameter nil 'fullscreen 'fullboth)
+  #+END_SRC
+
+  Start up options
+  #+BEGIN_SRC emacs-lisp :tangle yes
+    ;; Start up options
+    (setq inhibit-splash-screen t inhibit-scratch-message nil
+          inhibit-major-mode 'org-mode)
+
+    ;; Scrollbar, tool, menu bar
+    (scroll-bar-mode -1)
+    (tool-bar-mode -1)
+    (menu-bar-mode -1)
+
+    ;; Marking text
+    (delete-selection-mode t)
+    (transient-mark-mode t)
+    (setq x-select-enable-clipboard t)
+
+    ;; Display settings
+    (setq-default indicate-empty-lines t)
+    (when (not indicate-empty-lines)
+      (toogle-indicate-empty-lines))
+
+    ;; Yes or not
+    (defalias 'yes-or-no-p 'y-or-n-p)
+
+    ;; Ido mode
+    (ido-mode t)
+    (setq ido-enable-flex-matching t
+          ido-use-visual-buffers t)
+
+    ;; Column number mode
+    (setq column-number-mode t)
+
+    ;; Auto pair
+    (require 'autopair)
+
+    ;; Auto-complete
+    (require 'auto-complete-config)
+    (ac-config-default)
+
+    (setq global-linum-mode t)
+    (global-linum-mode 1)
+
+    (projectile-global-mode)
+
+    (setq evil-mode t)
+    (evil-mode 1)
+  #+END_SRC
+
+
+* Helper functions
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun load-file-if-exists (file-name)
+  (let ((file-path (expand-file-name file-name user-emacs-directory)))
+    (when (file-exists-p file-path)
+      (load-file))))
+  #+END_SRC
+
+  Metakeyboard mac fix
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun command-to-meta()
+  (interactive)
+  (cond
+   ((string-equal system-type "darwin") ;Mac OS X
+    (progn
+      (setq
+       ns-command-modifier 'meta        ;Apple command key is Meta
+       ns-alter-modifer nil             ;Option is the Mac Option key
+       ns-use-mac-modifier-symbols nil  ;display standards Emacs (and not standard Mac) modifiers symbols
+       ))
+    )
+   )
+  )
+  #+END_SRC
+
+  Return to the original configuration
+  Useful when I'm working on the mechanical keyboard
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun meta-to-command()
+  (interactive)
+  (cond
+   ((string-equal system-type "darwin") ;Mac OS X
+    (progn
+      (setq
+       ns-command-modifier 'command        ;Apple command key is Meta
+       ns-alter-modifer nil             ;Option is the Mac Option key
+       ns-use-mac-modifier-symbols t  ;display standards Emacs (and not standard Mac) modifiers symbols
+       ))
+    )
+   )
+  )
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun kill-region-or-backward-word ()
+  (interactive)
+  (if (region-active-p)
+      (kill-region (region-beginning) (region-end))
+    (backward-kill-word 1)))
+  #+END_SRC
+
+  Switch to previous buffer
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun switch-to-previous-buffer ()
+  (interactive)
+  (switch-to-buffer (other-buffer (current-buffer) 1)))
+(global-set-key (kbd "C-<tab>") 'switch-to-previous-buffer)
+  #+END_SRC
+
+  Indentation and buffer clean up
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun untabify-buffer ()
+  (interactive)
+  (untabify (point-min) (point-max))
+  nil)
+
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max))
+  nil)
+
+(defun clean-buffer ()
+  "Perform a bunch of operations on the whitespace content of a buffer"
+  (interactive)
+  (indent-buffer)
+  (untabify-buffer)
+  (delete-trailing-whitespace))
+  #+END_SRC
+
+* Development configuration
+
+  Indententation
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(setq js2-basic-offset 2)
+(setq js2-bounce-indent-p t)
+(setq javascript-indent-level 2)
+(setq js-indent-level 2)
+(setq indent-tabs-mode nil)
+(setq c-basic-offset 2)
+(setq indent-tabs-mode nil)
+(setq jsx-indent-level 2)
+  #+END_SRC
+
+  Prevent backup files
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(setq make-backup-files nil)
+  #+END_SRC
+
+  Show matching parent
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(show-paren-mode t)
+  #+END_SRC
+
+  Highlight current line
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-hl-line-mode)
+  #+END_SRC
+
+  Powerline
+  #+begin_src emacs-lisp :tangle yes
+(require 'powerline)
+(powerline-evil-vim-color-theme)
+  #+end_src
+
+  Git gutter fringer
+  #+begin_src emacs-lisp :tangle yes
+(require 'git-gutter-fringe+)
+(global-git-gutter+-mode)
+  #+end_src
+
+  Snippets
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(add-to-list 'load-path
+             "~/.emacs.d/plugins/yasnippet")
+(require 'yasnippet)
+(yas-global-mode 1)
+  #+END_SRC
+
+* Hooks
+
+  Indentation hook
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(add-hook 'web-mode-hook
+          (lambda ()
+            (setq web-mode-markup-indent-offset 2)
+            (setq web-mode-css-indent-offset 2)
+            (setq web-mode-code-indent-offset 2)))
+  #+END_SRC
+
+  Untabify hook
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(add-hook 'write-file-hooks
+          (lambda () (untabify (point-min) (point-max))
+            nil))
+  #+END_SRC
+
+
+* Themes
+
+  #+BEGIN_SRC emacs-lisp :tangle yes
+;; Some nice color themes
+;; (load-theme 'tangotango t)
+
+;; Tomorrow noctilux theme
+;; (load-theme 'noctilux t)
+
+;; Tomorrow night paradise theme
+;; (load-theme 'tomorrow-night-paradise t)
+
+;; Zendburn theme
+;; (load-theme 'zenburn t)
+
+;; Ujelly
+;; (load-theme 'ujelly t)
+
+;; Clues theme
+;; (load-theme 'clues t)
+
+;; Heroku theme
+;; (load-theme 'heroku t)
+
+;; Heroku theme
+(load-theme 'base16-ocean-dark t)
+
+;; Gruvbox theme
+;; (load-theme 'gruvbox t)
+
+;; Ample theme
+;; (load-theme 'ample t)
+
+(defun load-gruvbox ()
+  (interactive)
+  (load-theme 'gruvbox t))
+
+(defun load-ujelly ()
+  (interactive)
+  (load-theme 'ujelly t))
+
+(defun load-ocean ()
+  (interactive)
+  (load-theme 'base16-ocean-dark t))
+
+(defun load-oceani ()
+  (interactive)
+  (load-theme 'base16-oceanicnext-dark t))
+  #+END_SRC
+
+* Key bindings
+
+  Magit status
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "<f5>") 'magit-status)
+  #+END_SRC
+
+  New line and indent
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "RET") 'newline-and-indent)
+  #+END_SRC
+
+  Goto line
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "C-x g") 'goto-line)
+  #+END_SRC
+
+  A more comfortable backspace
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-unset-key (kbd "C-h"))
+(global-set-key (kbd "C-h") 'backward-delete-char)
+(global-set-key (kbd "M-h") 'kill-region-or-backward-word)
+  #+END_SRC
+
+  Better Meta + x
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "M-x") 'helm-M-x)
+  #+END_SRC
+
+  RGrep
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "<f2>") 'rgrep)
+  #+END_SRC
+
+  Ace-window
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "M-p") 'ace-window)
+(setq aw-keys '(?a ?s ?d ?f ?g ?j ?k ?l))
+  #+END_SRC
+
+  Frames binding
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "<f3>") 'make-frame-command)
+(global-set-key (kbd "<f4>") 'delete-frame)
+  #+END_SRC
+
+  Swiper
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(global-set-key (kbd "C-s") 'swiper-helm)
+  #+END_SRC
+
+  Smart comment
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(require 'smart-comment)
+(global-set-key (kbd "C-;") 'smart-comment)
+  #+END_SRC
+
+  Clean up region (not sure if I am using this.
+  #+BEGIN_SRC emacs-lisp :tangle yes
+(defun cleanup-region (beg end)
+  "Remove tmux artifacts from region"
+  (interactive "r")
+  (dolist (re '("\\\\|\·*\n" "\W*│\·*"))
+    (replace-regex re "" nil beg end)))
+
+(global-set-key (kbd "C-x M-t") 'cleanup-region)
+(global-set-key (kbd "C-c n") 'clean-buffer)
+(setq-default show-trailing-whitespace t)
+  #+END_SRC
+
+  JSON format
+  #+BEGIN_SRC emacs-lisp :tangl yes
+(global-set-key (kbd "C-c C-i") 'json-format)
+  #+END_SRC
+
+* Others
+
+  Loading stuffs for dev-ops
+ #  #+BEGIN_SRC emacs-lisp :tangle yes
+ # (org-babel-do-load-languages
+ #  'org-babel-load-languages
+ #  '(
+ #    (sh . t)
+ #    (python . t)
+ #    (R . t)
+ #    (ruby . t)
+ #    (ditaa . t)
+ #    (dot . t)
+ #    (octave . t)
+ #    (sqlite . t)
+ #    (perl . t)
+ #    ))
+ #  #+END_SRC
